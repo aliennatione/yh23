@@ -1,0 +1,19 @@
+---
+- name: Create YunoHost Backup
+  command: yunohost backup create --system --apps --name "ansible_pre_deploy_{{ ansible_date_time.iso8601_basic_short }}"
+  register: backup_result
+  changed_when: "backup_result.rc == 0"
+  tags: ['backup']
+
+- name: Copy Pruning Script
+  copy:
+    src: prune_backups.py
+    dest: /usr/local/bin/prune_yunohost_backups.py
+    mode: '0700'
+  tags: ['backup']
+
+- name: Prune Old Backups (Keep last 3)
+  command: /usr/local/bin/prune_yunohost_backups.py
+  register: prune_result
+  changed_when: "'Deleting backup' in prune_result.stdout"
+  tags: ['backup']

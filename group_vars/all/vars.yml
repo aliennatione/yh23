@@ -1,0 +1,61 @@
+---
+# Domain Configuration
+main_domain: "bar.lan"
+vpn_domain: "vpn.bar.lan"
+
+# App List for iteration (optional, if we use a generic role, but we have specific roles)
+# We can store app paths and specific vars here
+
+apps:
+  forgejo:
+    domain: "git.{{ main_domain }}"
+    label: "Forgejo"
+    admin_user: "devops"
+    path: "/git"
+    access: "private" # set to 'public' to allow clone without SSO login (if repo is public)
+  trilium:
+    domain: "wiki.{{ main_domain }}"
+    label: "Trilium Notes"
+    path: "/"
+    access: "private"
+  dolibarr:
+    domain: "erp.{{ main_domain }}"
+    label: "Dolibarr"
+    path: "/"
+    access: "private"
+  grocy:
+    domain: "inventory.{{ main_domain }}"
+    label: "Grocy"
+    path: "/"
+    access: "private"
+  nodered:
+    domain: "brain.{{ main_domain }}"
+    label: "Node-RED"
+    path: "/"
+    access: "private" # API is handled separately via permission custom
+  monica:
+    domain: "monica.{{ main_domain }}"
+    label: "Monica PRM"
+    path: "/"
+    access: "private"
+
+# [SECURITY WARNING]
+# Secrets are currently stored in 'secrets.yml' in plaintext for initial setup.
+# PRODUCTION: Use 'ansible-vault encrypt group_vars/all/secrets.yml' immediately.
+# Secrets are now in secrets.yml
+admin_user: "admin"
+
+# Node-RED Specifics
+nodered_webhook_path: "/api/doli-webhook"
+
+# AI Configuration
+ai:
+  provider: "google"
+  model: "gemini-1.5-flash"
+  enabled: true
+
+# Customization Config
+theme:
+  name: "cortex"
+  color_primary: "#00d2ff"
+  color_bg: "#0f0f1b"

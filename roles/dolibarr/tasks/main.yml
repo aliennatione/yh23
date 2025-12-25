@@ -1,0 +1,18 @@
+---
+- name: Check if Dolibarr is installed
+  command: yunohost app list --output-as json
+  register: installed_apps
+  changed_when: false
+
+- name: Install Dolibarr
+  command: >
+    yunohost app install dolibarr
+    --args "domain={{ apps.dolibarr.domain }}&path={{ apps.dolibarr.path }}&is_public={{ 'true' if apps.dolibarr.access == 'public' else 'false' }}&admin_user={{ admin_user }}"
+  when: "'dolibarr' not in (installed_apps.stdout | from_json | list)"
+
+- name: Enable Dark Mode (THEME_DARKMODEENABLED=2)
+  # 2 means "Always use the dark mode"
+  command: >
+    mysql -e "INSERT INTO llx_const (name, value, type, note, entity) VALUES ('THEME_DARKMODEENABLED', '2', 'chaine', 'Enabled by Ansible', 1) ON DUPLICATE KEY UPDATE value='2';" dolibarr
+  ignore_errors: true 
+  # Ignore error if DB connectivity fails or schema differs slightly, non-critical for deploy.

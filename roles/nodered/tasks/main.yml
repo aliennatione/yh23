@@ -1,0 +1,15 @@
+---
+- include_tasks: ../../common/tasks/yunohost_app.yml
+  vars:
+    app_name: "nodered"
+    app_label: "Node-RED"
+    app_args: "domain={{ apps.nodered.domain }}&path={{ apps.nodered.path }}&is_public={{ 'true' if apps.nodered.access == 'public' else 'false' }}&admin_user={{ admin_user }}"
+
+- name: Deploy Custom Node-RED Settings
+  copy:
+    src: "{{ playbook_dir }}/assets/nodered/settings.js"
+    dest: /var/www/nodered/settings.js
+    owner: nodered
+    group: nodered
+    mode: '0644'
+  notify: Restart Node-RED

@@ -1,0 +1,6 @@
+---
+- include_tasks: ../../common/tasks/yunohost_app.yml
+  vars:
+    app_name: "monica"
+    app_label: "Monica"
+    app_args: "domain={{ apps.monica.domain }}&path={{ apps.monica.path }}&is_public={{ 'true' if apps.monica.access == 'public' else 'false' }}&admin={{ admin_user }}"

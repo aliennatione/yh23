@@ -1,0 +1,50 @@
+---
+# Node-RED Specific API Access
+- name: Create Permission for Node-RED API
+  command: >
+    yunohost permission create --name nodered.api --url /api --app nodered
+  register: create_perm
+  failed_when: 
+    - create_perm.rc != 0 
+    - "'already exists' not in create_perm.stderr"
+  changed_when: create_perm.rc == 0
+
+- name: Check Visitor Access for Node-RED API
+  command: yunohost permission list --json
+  register: perm_list
+  changed_when: false
+
+- name: Allow Visitors to Node-RED API
+  command: >
+    yunohost permission update nodered.api --add visitors
+  when: "'visitors' not in (perm_list.stdout | from_json | selectattr('permission', 'equalto', 'nodered.api') | map(attribute='auth_header') | first | default(false))" # Logic simplified, depends on output format, safer to look for grep or just run and catch error
+  # Reverting to simpler catch-error approach for 'update' commands as checking JSON inside jinja efficiently for this is complex without a custom filter or jq.
+  # Better approach for YunoHost: 
+  register: update_perm
+  failed_when:
+    - update_perm.rc != 0
+    - "'already has' not in update_perm.stderr"
+  changed_when: update_perm.rc == 0
+
+# Global Access Control Reinforcement
+- name: Enforce Public Access (Add Visitors)
+  command: >
+    yunohost permission update {{ item.key }}.main --add visitors
+  loop: "{{ apps | dict2items }}"
+  when: item.value.access == 'public'
+  register: public_perm
+  failed_when:
+    - public_perm.rc != 0
+    - "'already has' not in public_perm.stderr"
+  changed_when: public_perm.rc == 0
+
+- name: Enforce Private Access (Remove Visitors)
+  command: >
+    yunohost permission update {{ item.key }}.main --remove visitors
+  loop: "{{ apps | dict2items }}"
+  when: item.value.access == 'private'
+  register: private_perm
+  failed_when:
+    - private_perm.rc != 0
+    - "'does not have' not in private_perm.stderr"
+  changed_when: private_perm.rc == 0

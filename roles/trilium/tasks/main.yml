@@ -1,0 +1,6 @@
+---
+- include_tasks: ../../common/tasks/yunohost_app.yml
+  vars:
+    app_name: "trilium"
+    app_label: "Trilium Notes"
+    app_args: "domain={{ apps.trilium.domain }}&path={{ apps.trilium.path }}&is_public={{ 'true' if apps.trilium.access == 'public' else 'false' }}&admin_user={{ admin_user }}"

@@ -1,0 +1,6 @@
+---
+# Defaults for Monica Role
+monica_domain: "monica.{{ main_domain }}"
+monica_path: "/"
+monica_access: "private"
+monica_admin: "{{ admin_user }}"

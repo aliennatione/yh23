@@ -1,0 +1,34 @@
+---
+- name: Ensure Custom Theme Directory Exists
+  file:
+    path: "/usr/share/ssowat/portal/assets/themes/{{ theme.name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy Custom Portal CSS
+  copy:
+    src: "{{ playbook_dir }}/assets/ssowat/custom_portal.css"
+    dest: "/usr/share/ssowat/portal/assets/themes/{{ theme.name }}/custom_portal.css"
+    owner: root
+    group: root
+    mode: '0644'
+
+
+- name: Check current SSOWat theme
+  command: jq -r '.theme' /etc/ssowat/conf.json.persistent
+  register: current_theme
+  changed_when: false
+
+- name: Apply Smart Bar Theme
+  shell: >
+    jq '.theme = "{{ theme.name }}"' /etc/ssowat/conf.json.persistent > /tmp/ssowat_conf.tmp && mv /tmp/ssowat_conf.tmp /etc/ssowat/conf.json.persistent
+  when: current_theme.stdout != "{{ theme.name }}"
+  notify: Restart Nginx
+
+handlers:
+  - name: Restart Nginx
+    service:
+      name: nginx
+      state: restarted

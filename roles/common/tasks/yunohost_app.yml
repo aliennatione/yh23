@@ -1,0 +1,17 @@
+---
+# Reusable task to install a YunoHost app
+# Variables required:
+#   app_name: "forgejo"
+#   app_label: "Forgejo" (optional, for display)
+#   app_args: "domain=...&path=..."
+
+- name: "Check if {{ app_name }} is installed"
+  command: yunohost app list --output-as json
+  register: installed_apps
+  changed_when: false
+
+- name: "Install {{ app_label | default(app_name) }}"
+  command: >
+    yunohost app install {{ app_name }}
+    --args "{{ app_args }}"
+  when: "app_name not in (installed_apps.stdout | from_json | list)"

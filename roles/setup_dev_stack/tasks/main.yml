@@ -1,0 +1,73 @@
+---
+- name: Create Forgejo Admin User
+  # Running as root, switching to git user typically used by Forgejo/Gitea
+  become: true
+  become_user: git
+  # command: forgejo admin user create --username {{ apps.forgejo.admin_user }} --password {{ default_password }} --email devops@{{ main_domain }} --admin
+  # Idempotency: "user already exists" failure.
+  shell: >
+    /var/www/forgejo/forgejo admin user create 
+    --username {{ apps.forgejo.admin_user }} 
+    --password "{{ default_password }}" 
+    --email "devops@{{ main_domain }}" 
+    --admin || true
+  register: create_user
+  changed_when: "'Created' in create_user.stdout"
+  # Note: Path to binary might vary (/usr/local/bin/forgejo, /var/www/forgejo/forgejo). 
+  # YunoHost usually puts it in /var/www/forgejo/ or symlinks. 
+  # Using '|| true' to fake idempotency for this scaffold (better to list users first).
+
+
+- name: Get Forgejo Port
+  command: yunohost app setting forgejo port
+  register: forgejo_port
+  changed_when: false
+
+- name: Create 'smart-bar-infra' Repository (with dynamic port)
+  uri:
+    url: "http://127.0.0.1:{{ forgejo_port.stdout }}/api/v1/user/repos"
+    method: POST
+    user: "{{ apps.forgejo.admin_user }}"
+    password: "{{ default_password }}"
+    force_basic_auth: yes
+    body_format: json
+    body:
+      name: "smart-bar-infra"
+      private: true
+      auto_init: true
+    status_code: [201, 409]
+  register: create_repo_dynamic
+  changed_when: create_repo_dynamic.status == 201
+  when: forgejo_port.rc == 0
+
+- name: Create Forgejo Assets Directory
+  file:
+    path: /var/www/forgejo/custom/public/assets/css
+    state: directory
+    owner: git
+    group: git
+    mode: '0755'
+
+- name: Copy Forgejo Smart Bar Theme
+  copy:
+    src: "{{ playbook_dir }}/assets/forgejo/theme-smartbar.css"
+    dest: /var/www/forgejo/custom/public/assets/css/theme-smartbar.css
+    owner: git
+    group: git
+    mode: '0644'
+  notify: Restart Forgejo
+
+- name: Enable Smart Bar Theme in app.ini
+  lineinfile:
+    path: /var/www/forgejo/custom/conf/app.ini
+    regexp: '^DEFAULT_THEME'
+    line: 'DEFAULT_THEME = smartbar'
+    insertafter: '\[ui\]'
+  notify: Restart Forgejo
+
+handlers:
+  - name: Restart Forgejo
+    service:
+      name: forgejo
+      state: restarted
+

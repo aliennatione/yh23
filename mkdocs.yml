@@ -1,0 +1,39 @@
+site_name: Smart Bar Cortex Docs
+theme:
+  name: material
+  language: en
+  palette: 
+    # Switch to dark mode
+    - scheme: slate
+      primary: cyan
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: cyan
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+
+nav:
+  - English:
+    - Home: index.md
+    - Architecture: ARCHITECTURE.md
+    - Deployment Guide: MANUAL_STEPS.md
+    - AI Integration: AI_INTEGRATION.md
+    - Troubleshooting: TROUBLESHOOTING.md
+    - Testing Strategy: TESTING.md
+    - Publishing Docs: PUBLISHING.md
+  - Italiano:
+    - Home: index_it.md
+    - Architettura: ARCHITECTURE_IT.md
+    - Guida Deployment: MANUAL_STEPS_IT.md
+    - Integrazione AI: AI_INTEGRATION_IT.md
+    - Risoluzione Problemi: TROUBLESHOOTING_IT.md
+    - Strategie di Test: TESTING_IT.md
+    - Pubblicazione Docs: PUBLISHING_IT.md

@@ -1,0 +1,28 @@
+:root {
+    --color-primary: #00d2ff;
+    --color-primary-dark-1: #00b8e6;
+    --color-primary-light-1: #33dbff;
+    --color-body: #0f0f1b;
+    --color-text: #e0e0e0;
+    --color-input-background: #1a1a2e;
+    --color-input-border: #333;
+    --color-navbar: #16213e;
+    --color-footer: #16213e;
+}
+
+.ui.menu .item {
+    color: #e0e0e0 !important;
+}
+
+.ui.secondary.menu .active.item {
+    background-color: rgba(0, 210, 255, 0.1) !important;
+    color: #00d2ff !important;
+}
+
+.ui.button.green {
+    background-color: #00d2ff !important;
+}
+
+.ui.button.green:hover {
+    background-color: #33dbff !important;
+}

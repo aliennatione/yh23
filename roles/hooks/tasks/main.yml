@@ -1,0 +1,25 @@
+---
+- name: Ensure Hooks Directory Exists
+  file:
+    path: /etc/yunohost/hooks.d/50_custom_theme
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy Theme Persistence Hook
+  copy:
+    dest: /etc/yunohost/hooks.d/50_custom_theme/post_app_upgrade
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      # Hook to re-apply Smart Bar theme after SSOWat upgrade
+      app=$1
+      
+      if [ "$app" == "sso-wat" ]; then
+        echo "Re-applying Smart Bar Theme..."
+        cp -r {{ playbook_dir }}/assets/ssowat/* /usr/share/ssowat/portal/assets/themes/{{ theme.name }}/
+        # Re-inject config if needed (though config usually survives)
+      fi

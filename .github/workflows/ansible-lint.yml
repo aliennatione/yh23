@@ -1,0 +1,26 @@
+name: Ansible Lint
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+          pip3 install ansible-lint
+
+      - name: Create Vault Pass File
+        run: echo "dummy_pass" > .vault_pass
+
+      - name: Syntax Check
+        run: ansible-playbook site.yml --syntax-check --vault-password-file .vault_pass
+        env:
+          ANSIBLE_CONFIG: ansible.cfg
+
+      - name: Run Ansible Lint
+        run: ansible-lint site.yml

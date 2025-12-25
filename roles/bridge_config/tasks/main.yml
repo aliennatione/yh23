@@ -1,0 +1,42 @@
+---
+- name: Get Dolibarr Database Name
+  command: yunohost app setting dolibarr mysql_db
+  register: doli_db_name
+  changed_when: false
+
+- name: Enable Dolibarr Webhooks Module (SQL Injection - Safe Mode)
+  # Using 'shell' to allow careful quoting. Ideally use community.mysql.mysql_query if available.
+  command: >
+    mysql -e "INSERT INTO llx_const (name, value, type, note, entity) VALUES ('MAIN_MODULE_WEBHOOK', '1', 'chaine', 'Webhook module enabled by Ansible', 1) ON DUPLICATE KEY UPDATE value='1';" "{{ doli_db_name.stdout | quote }}"
+
+- name: Configure Webhook Endpoint
+  command: >
+    mysql -e "INSERT INTO llx_webhook (module, url, target, type) VALUES ('webhook', 'https://{{ apps.nodered.domain }}{{ nodered_webhook_path }}', 'all', 'POST') ON DUPLICATE KEY UPDATE url='https://{{ apps.nodered.domain }}{{ nodered_webhook_path }}';" "{{ doli_db_name.stdout | quote }}"
+  register: webhook_config
+  failed_when: webhook_config.rc != 0
+  changed_when: "'1 row affected' in webhook_config.stdout or '2 rows affected' in webhook_config.stdout" 
+
+- name: Install Node-RED NPM packages
+  npm:
+    name: "{{ item }}"
+    path: /var/www/nodered/data
+    state: present
+  loop:
+    - node-red-contrib-openai-auth
+    - node-red-contrib-telegrambot
+  notify: Restart Node-RED
+
+- name: Deploy AI Gateway Flow
+  copy:
+    src: "{{ playbook_dir }}/assets/nodered/flows/ai_gateway.json"
+    dest: /var/www/nodered/data/lib/flows/ai_gateway.json
+    owner: nodered
+    group: nodered
+    mode: '0644'
+  notify: Restart Node-RED
+
+- name: Restart Node-RED (if packages installed)
+  service:
+    name: nodered
+    state: restarted
+  when: false # Triggered by handler

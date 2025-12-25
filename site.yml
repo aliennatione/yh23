@@ -1,0 +1,52 @@
+---
+- name: Smart Bar AI-Stack Deployment
+  hosts: yunohost
+  become: true
+  gather_facts: true
+  
+  roles:
+    # Safety First
+    - role: backup
+      tags: ['backup']
+      when: enable_backup | default(false) | bool
+
+    # Prerequisites
+    - role: common
+      tags: ['common']
+
+    # Portal Customization
+    - role: yunohost_portal
+      tags: ['theme', 'portal']
+
+    # Maintenance Hooks
+    - role: hooks
+      tags: ['hooks', 'maintenance']
+
+    # Core Applications
+    - role: forgejo
+      tags: ['apps', 'forgejo']
+      
+    - role: trilium
+      tags: ['apps', 'trilium']
+      
+    - role: dolibarr
+      tags: ['apps', 'dolibarr']
+      
+    - role: grocy
+      tags: ['apps', 'grocy']
+      
+    - role: nodered
+      tags: ['apps', 'nodered']
+
+    - role: monica
+      tags: ['apps', 'monica']
+
+    # Integrations & Logic
+    - role: bridge_config
+      tags: ['bridge', 'logic']
+      
+    - role: sso_security
+      tags: ['security', 'sso']
+      
+    - role: setup_dev_stack
+      tags: ['dev', 'git']

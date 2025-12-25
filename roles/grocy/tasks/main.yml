@@ -1,0 +1,6 @@
+---
+- include_tasks: ../../common/tasks/yunohost_app.yml
+  vars:
+    app_name: "grocy"
+    app_label: "Grocy"
+    app_args: "domain={{ apps.grocy.domain }}&path={{ apps.grocy.path }}&is_public={{ 'true' if apps.grocy.access == 'public' else 'false' }}&admin_user={{ admin_user }}"

@@ -1,0 +1,168 @@
+[
+    {
+        "id": "tab_ai_gateway",
+        "type": "tab",
+        "label": "AI Gateway",
+        "disabled": false,
+        "info": "Central gateway for AI processing via Google Gemini."
+    },
+    {
+        "id": "http_in_operator",
+        "type": "http in",
+        "z": "tab_ai_gateway",
+        "name": "Operator API",
+        "url": "/api/ai/operator",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 120,
+        "wires": [
+            [
+                "set_operator_context"
+            ]
+        ]
+    },
+    {
+        "id": "http_in_dev",
+        "type": "http in",
+        "z": "tab_ai_gateway",
+        "name": "Dev API",
+        "url": "/api/ai/dev",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 240,
+        "wires": [
+            [
+                "set_dev_context"
+            ]
+        ]
+    },
+    {
+        "id": "set_operator_context",
+        "type": "change",
+        "z": "tab_ai_gateway",
+        "name": "Set Operator Persona",
+        "rules": [
+            {
+                "t": "set",
+                "p": "system_prompt",
+                "pt": "msg",
+                "to": "You are a helpful assistant for the Smart Bar staff. Your users are bartenders and managers using Dolibarr and Grocy. Be concise, friendly, and focus on operational tasks.",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 380,
+        "y": 120,
+        "wires": [
+            [
+                "prepare_gemini_payload"
+            ]
+        ]
+    },
+    {
+        "id": "set_dev_context",
+        "type": "change",
+        "z": "tab_ai_gateway",
+        "name": "Set DevOps Persona",
+        "rules": [
+            {
+                "t": "set",
+                "p": "system_prompt",
+                "pt": "msg",
+                "to": "You are a Senior DevOps Engineer managing this YunoHost infrastructure. You understand Ansible, Linux logs, and Node-RED flows. Provide technical, accurate, and safe commands or explanations.",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 380,
+        "y": 240,
+        "wires": [
+            [
+                "prepare_gemini_payload"
+            ]
+        ]
+    },
+    {
+        "id": "prepare_gemini_payload",
+        "type": "function",
+        "z": "tab_ai_gateway",
+        "name": "Prepare Gemini Request",
+        "func": "const apiKey = env.get('GEMINI_API_KEY') || 'INSERT_KEY_HERE';\nconst prompt = msg.payload.prompt || msg.payload;\nconst system = msg.system_prompt;\n\nmsg.url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;\nmsg.headers = {\n    'Content-Type': 'application/json'\n};\nmsg.payload = {\n    \"contents\": [{\n        \"parts\": [{\n            \"text\": system + \"\\n\\nUser Request: \" + prompt\n        }]\n    }]\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 180,
+        "wires": [
+            [
+                "req_gemini"
+            ]
+        ]
+    },
+    {
+        "id": "req_gemini",
+        "type": "http request",
+        "z": "tab_ai_gateway",
+        "name": "Call Gemini API",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 880,
+        "y": 180,
+        "wires": [
+            [
+                "format_response"
+            ]
+        ]
+    },
+    {
+        "id": "format_response",
+        "type": "function",
+        "z": "tab_ai_gateway",
+        "name": "Extract Answer",
+        "func": "if (msg.payload.candidates && msg.payload.candidates.length > 0) {\n    msg.payload = msg.payload.candidates[0].content.parts[0].text;\n} else {\n    msg.payload = \"Error: No response from AI Provider.\";\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1080,
+        "y": 180,
+        "wires": [
+            [
+                "http_response"
+            ]
+        ]
+    },
+    {
+        "id": "http_response",
+        "type": "http response",
+        "z": "tab_ai_gateway",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1250,
+        "y": 180,
+        "wires": []
+    }
+]
